@@ -1,3 +1,4 @@
+{% load i18n %}
 {% load object_log_tags %}
-{% permalink log_item.user %} edited {{log_item.object_type1_id|ct_for_id}}
+{% permalink log_item.user %} {% trans "edited" %} {{log_item.object_type1_id|ct_for_id}}
 {% contenttypelink log_item.object_type1_id log_item.object_id1 %}{{log_item.data.object1_str}}{% endcontenttypelink %}
