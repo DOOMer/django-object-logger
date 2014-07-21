@@ -2,15 +2,14 @@ from sys import modules
 
 from django.db import models
 
-from django.contrib.auth.models import User
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.contenttypes.generic import GenericForeignKey
 from django.db import transaction
 from django.db.utils import DatabaseError
 from django.template.loader import get_template
 from django.template import Context
-from django.utils import simplejson
-
+from django.conf import settings
+import json
 
 class LogActionManager(models.Manager):
     _cache = {}
@@ -146,7 +145,7 @@ class LogItem(models.Model):
     action = models.ForeignKey(LogAction, related_name="entries")
     #action = models.CharField(max_length=128)
     timestamp = models.DateTimeField(auto_now_add=True, )
-    user = models.ForeignKey(User, related_name='log_items')
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='log_items')
     
     object_type1 = models.ForeignKey(ContentType, \
     related_name='log_items1', null=True)
@@ -174,7 +173,7 @@ class LogItem(models.Model):
     @property
     def data(self):
         if self._data is None and not self.serialized_data is None:
-            self._data = simplejson.loads(self.serialized_data)
+            self._data = json.loads(self.serialized_data)
         return self._data
 
     @data.setter
@@ -192,7 +191,7 @@ class LogItem(models.Model):
 
     def save(self, *args, **kwargs):
         if self._data is not None and self.serialized_data is None:
-            self.serialized_data = simplejson.dumps(self._data)
+            self.serialized_data = json.dumps(self._data)
         super(LogItem, self).save(*args, **kwargs)
 
     def render(self, **context):

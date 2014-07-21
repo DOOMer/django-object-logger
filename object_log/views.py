@@ -1,4 +1,5 @@
-from django.contrib.auth.models import User, Group
+from django.contrib.auth.models import Group
+from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponseForbidden, HttpResponseRedirect
@@ -8,6 +9,7 @@ from django.shortcuts import render_to_response, get_object_or_404
 
 from object_log.models import LogItem
 
+User = get_user_model()
 
 def list_for_object(request, obj, rest=False):
     """
