@@ -1,7 +1,9 @@
 from django.conf import settings
+from django.core.exceptions import ObjectDoesNotExist
 from django.contrib.contenttypes.models import ContentType
 from django.template import Library, Node, NodeList, Variable, TemplateSyntaxError
 from django.utils.safestring import SafeString
+from ..models import LogItem
 
 register = Library()
 
@@ -42,7 +44,7 @@ def contenttypelink(parser, token):
     """
     bits = token.contents.split()
     if len(bits) != 3:
-        raise TemplateSyntaxError, "'content_type_link' tag takes two arguments: a content type id and pk"
+        raise TemplateSyntaxError("'content_type_link' tag takes two arguments: a content type id and pk")
     
     inner_nodelist = parser.parse(('endcontenttypelink',))
     parser.delete_first_token()
@@ -50,7 +52,17 @@ def contenttypelink(parser, token):
     return ContentTypeLinkNode(bits[1], bits[2], inner_nodelist)
 
 
-LINK_FORMAT = '<a href="%s/object/%%s/%%s/">' % settings.SITE_ROOT
+
+@register.inclusion_tag("object_log/log_for_user.html")
+def list_user_actions(user):
+    """
+    Return a list to all actions, aasugned with user
+    """
+    log_items = LogItem.objects.filter(user=user).select_related('user')
+    return {'log_items': log_items, }
+
+
+LINK_FORMAT = '<a href="object/%%s/%%s/">'
 class ContentTypeLinkNode(Node):
 
     def __init__(self, content_type_id, pk, inner_nodelist):
@@ -65,7 +77,7 @@ class ContentTypeLinkNode(Node):
         if hasattr(content_type.model_class(), 'get_absolute_url'):
             pk = self.pk.resolve(context)
             nodelist = NodeList()
-            nodelist.append(LINK_FORMAT % (content_type.pk, pk))
+            #nodelist.append(LINK_FORMAT % (content_type.pk, pk))
             nodelist.append(self.inner_nodelist.render(context))
             nodelist.append('</a>')
             return nodelist.render(context)
