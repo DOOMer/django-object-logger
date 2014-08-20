@@ -4,6 +4,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.template import Library, Node, NodeList, Variable, TemplateSyntaxError
 from django.utils.safestring import SafeString
 from ..models import LogItem
+from ..settings import USER_LOGS_DESC
 
 register = Library()
 
@@ -58,7 +59,11 @@ def list_user_actions(user):
     """
     Return a list to all actions, aasugned with user
     """
+    # USER_LOGS_DESC
     log_items = LogItem.objects.filter(user=user).select_related('user')
+    if USER_LOGS_DESC:
+        log_items.order_by('-timestamp')
+
     return {'log_items': log_items, }
 
 

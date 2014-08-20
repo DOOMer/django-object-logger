@@ -8,6 +8,7 @@ from django.db.models.query_utils import Q
 from django.shortcuts import render_to_response, get_object_or_404
 
 from object_log.models import LogItem
+import settings
 
 User = get_user_model()
 
@@ -29,6 +30,9 @@ def list_for_object(request, obj, rest=False):
         | Q(object_type3=content_type, object_id3=obj.pk) \
 
     log = LogItem.objects.filter(q).select_related('user').distinct()
+    
+    if settings.USER_LOGS_DESC:
+        log.order_by('-timestamp')
 
     if not rest:
         return render_to_response('object_log/log.html',
@@ -93,6 +97,9 @@ def list_user_actions(request, pk, rest=False):
 
     user = get_object_or_404(User, pk=pk)
     log_items = LogItem.objects.filter(user=user).select_related('user')
+    
+    if settings.USER_LOGS_DESC:
+        log_items.order_by('-timestamp')
 
     if not rest:
         return render_to_response('object_log/log.html',
